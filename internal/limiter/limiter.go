@@ -1,52 +1,62 @@
 package limiter
 
 import (
+	"errors"
+
+	"github.com/rhbarauna/goexpert-desafio-rate-limiter/configs"
 	"github.com/rhbarauna/goexpert-desafio-rate-limiter/internal/storage"
 )
 
 type Limiter struct {
-	Storage        storage.Storage
-	IpCooldown     int
-	IpDefaultLimit int
-	IpTTL          int
+	storage        storage.Storage
+	cooldown       int
+	ipDefaultLimit int
+	ipTTL          int
+	tokens         map[string]configs.TokenConfig
 }
 
-func NewLimiter(storage storage.Storage, ipCooldown int, ipDefaultLimit int, ipTTL int) Limiter {
+var ErrLimitedAccess = errors.New("access blocked")
+
+func NewLimiter(storage storage.Storage, cooldown int, ipDefaultLimit int, ipTTL int, tokens map[string]configs.TokenConfig) Limiter {
 	limiter := Limiter{
-		Storage:        storage,
-		IpCooldown:     ipCooldown,
-		IpDefaultLimit: ipDefaultLimit,
-		IpTTL:          ipTTL,
+		storage:        storage,
+		cooldown:       cooldown,
+		ipDefaultLimit: ipDefaultLimit,
+		ipTTL:          ipTTL,
+		tokens:         tokens,
 	}
 
 	return limiter
 }
 
-func (l *Limiter) HandleToken(tk string) (bool, error) {
-	tokenConfig, err := l.Storage.GetTokenConfig(tk)
+func (l *Limiter) Limit(ip string, token string) error {
+	limit := l.ipDefaultLimit
+	ttl := l.ipTTL
+	term := ip
 
-	if err != nil {
-		return false, err
+	tokenConfig, tokenExists := l.tokens[token]
+
+	if tokenExists {
+		term = tokenConfig.Name
+		ttl = tokenConfig.Ttl
+		limit = tokenConfig.MaxRequests
 	}
-	return l.check(tk, tokenConfig.ReqLimit, tokenConfig.TtlLimit, tokenConfig.Cooldown)
+
+	return l.goNext(term, limit, ttl)
 }
 
-func (l *Limiter) HandleIP(ip string) (bool, error) {
-	return l.check(ip, l.IpDefaultLimit, l.IpTTL, l.IpCooldown)
-}
-
-func (l *Limiter) check(term string, limit int, reqTTL int, cooldown int) (bool, error) {
-	counter, err := l.Storage.GetCounter(term)
+func (l *Limiter) goNext(term string, limit int, reqTTL int) error {
+	counter, err := l.storage.GetCounter(term)
 
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	if counter == limit {
-		l.Storage.RegisterBlock(term, cooldown)
-		return false, nil
+		l.storage.RegisterBlock(term, l.cooldown)
+		return ErrLimitedAccess
 	}
 
-	l.Storage.IncrementCounter(term, reqTTL)
-	return true, nil
+	l.storage.IncrementCounter(term, reqTTL)
+	return nil
 }

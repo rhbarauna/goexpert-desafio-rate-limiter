@@ -2,13 +2,11 @@ package redis
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strconv"
 	"time"
 
 	"github.com/redis/go-redis/v9"
-	"github.com/rhbarauna/goexpert-desafio-rate-limiter/internal/database"
 )
 
 type RedisStorage struct {
@@ -23,35 +21,6 @@ func NewRedisStorage(address string, port string, password string, database int)
 			DB:       database,
 		}),
 	}
-}
-
-func (s *RedisStorage) SetTokenConfig(token string, rateLimitInfo database.RateLimitInfo) error {
-	infoJSON, err := json.Marshal(rateLimitInfo)
-	if err != nil {
-		return err
-	}
-
-	err = s.client.Set(context.Background(), "ratelimits:token:"+token, infoJSON, time.Second*time.Duration(rateLimitInfo.TtlLimit)).Err()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (s *RedisStorage) GetTokenConfig(token string) (database.RateLimitInfo, error) {
-	infoStr, err := s.client.Get(context.Background(), "ratelimits:token:"+token).Result()
-	if err != nil {
-		return database.RateLimitInfo{}, err
-	}
-
-	var info database.RateLimitInfo
-	err = json.Unmarshal([]byte(infoStr), &info)
-	if err != nil {
-		return database.RateLimitInfo{}, err
-	}
-
-	return info, nil
 }
 
 func (s *RedisStorage) GetCounter(key string) (int, error) {

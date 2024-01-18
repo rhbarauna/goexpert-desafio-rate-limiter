@@ -1,27 +1,29 @@
 package configs
 
-import "github.com/spf13/viper"
+import (
+	"encoding/json"
+
+	"github.com/spf13/viper"
+)
+
+type TokenConfig struct {
+	Name        string `json:"name"`
+	MaxRequests int    `json:"limit"`
+	Ttl         int    `json:"ttl"`
+}
 
 type conf struct {
-	// DBDriver          string `mapstructure:"DB_DRIVER"`
-	// DBHost            string `mapstructure:"DB_HOST"`
-	// DBPort            string `mapstructure:"DB_PORT"`
-	// DBUser            string `mapstructure:"DB_USER"`
-	// DBPassword        string `mapstructure:"DB_PASSWORD"`
-	// DBName            string `mapstructure:"DB_NAME"`
-
-	// GRPCServerPort    string `mapstructure:"GRPC_SERVER_PORT"`
-	// GraphQLServerPort string `mapstructure:"GRAPHQL_SERVER_PORT"`
 	RedisHost     string `mapstructure:"REDIS_HOST"`
 	RedisPort     string `mapstructure:"REDIS_PORT"`
 	RedisPassword string `mapstructure:"REDIS_PASSWORD"`
 	RedisDatabase int    `mapstructure:"REDIS_DATABASE"`
 
-	IpRequestLimit       int    `mapstructure:"IP_REQUEST_LIMIT"`
-	IpDefaultWindow      int    `mapstructure:"IP_DEFAULT_WINDOW_SECONDS"`
-	IpDefaultCooldown    int    `mapstructure:"IP_DEFAULT_COOLDOWN_SECONDS"`
-	TokenDefaultCooldown int    `mapstructure:"TOKEN_DEFAULT_COOLDOWN_SECONDS"`
-	WebServerPort        string `mapstructure:"WEB_SERVER_PORT"`
+	Tokens             map[string]TokenConfig `mapstructure:"-"`
+	IpMaxRequests      int                    `mapstructure:"IP_MAX_REQUESTS"`
+	IpMaxRequestWindow int                    `mapstructure:"IP_MAX_REQUESTS_WINDOW_SECONDS"`
+	Cooldown           int                    `mapstructure:"COOLDOWN_SECONDS"`
+
+	WebServerPort string `mapstructure:"WEB_SERVER_PORT"`
 }
 
 func LoadConfig(path string) (*conf, error) {
@@ -39,5 +41,19 @@ func LoadConfig(path string) (*conf, error) {
 	if err != nil {
 		panic(err)
 	}
+
+	var tkns_cfg []TokenConfig
+	configured_tokens := viper.GetString("TOKENS")
+	err = json.Unmarshal([]byte(configured_tokens), &tkns_cfg)
+
+	if err != nil {
+		panic(err)
+	}
+
+	cfg.Tokens = make(map[string]TokenConfig)
+	for _, tkn := range tkns_cfg {
+		cfg.Tokens[tkn.Name] = tkn
+	}
+
 	return cfg, err
 }

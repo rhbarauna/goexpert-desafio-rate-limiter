@@ -12,7 +12,6 @@ import (
 )
 
 func main() {
-
 	configs, err := configs.LoadConfig("../")
 	if err != nil {
 		panic(err)
@@ -20,7 +19,7 @@ func main() {
 
 	// DEPS
 	storage := redis.NewRedisStorage(configs.RedisHost, configs.RedisPort, configs.RedisPassword, configs.RedisDatabase)
-	limiter := limiter.NewLimiter(storage, configs.IpDefaultCooldown, configs.IpRequestLimit, configs.IpDefaultWindow)
+	limiter := limiter.NewLimiter(storage, configs.Cooldown, configs.IpMaxRequests, configs.IpMaxRequestWindow, configs.Tokens)
 	rateLimiterMiddleware := ratelimiter.NewRateLimiter(limiter)
 	// END DEPS
 
