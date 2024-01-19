@@ -12,14 +12,14 @@ import (
 )
 
 func main() {
-	configs, err := configs.LoadConfig("../")
+	configs, err := configs.LoadConfig(".")
 	if err != nil {
 		panic(err)
 	}
 
 	// DEPS
 	storage := redis.NewRedisStorage(configs.RedisHost, configs.RedisPort, configs.RedisPassword, configs.RedisDatabase)
-	limiter := limiter.NewLimiter(storage, configs.Cooldown, configs.IpMaxRequests, configs.IpMaxRequestWindow, configs.Tokens)
+	limiter := limiter.NewLimiter(storage, configs.Cooldown, configs.MaxRequests, configs.Ttl, configs.Tokens)
 	rateLimiterMiddleware := ratelimiter.NewRateLimiter(limiter)
 	// END DEPS
 
@@ -31,10 +31,9 @@ func main() {
 	router.Use(rateLimiterMiddleware.Limit)
 	router.Use(middleware.Recoverer)
 
-	//Criar uma roda para cadastrar as configs para um token
-	//criar uma rota para obter as configs de um token
 	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("HELLO WORLD!"))
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("OK"))
 	})
 
 	http.ListenAndServe(webServerPort, router)

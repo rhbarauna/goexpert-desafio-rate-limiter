@@ -8,55 +8,67 @@ import (
 )
 
 type Limiter struct {
-	storage        storage.Storage
-	cooldown       int
-	ipDefaultLimit int
-	ipTTL          int
-	tokens         map[string]configs.TokenConfig
+	storage     storage.Storage
+	cooldown    int
+	maxRequests int
+	ttl         int
+	tokens      map[string]configs.TokenConfig
 }
 
 var ErrLimitedAccess = errors.New("access blocked")
 
-func NewLimiter(storage storage.Storage, cooldown int, ipDefaultLimit int, ipTTL int, tokens map[string]configs.TokenConfig) Limiter {
+func NewLimiter(storage storage.Storage, cooldown int, maxRequests int, ttl int, tokens map[string]configs.TokenConfig) Limiter {
 	limiter := Limiter{
-		storage:        storage,
-		cooldown:       cooldown,
-		ipDefaultLimit: ipDefaultLimit,
-		ipTTL:          ipTTL,
-		tokens:         tokens,
+		storage:     storage,
+		cooldown:    cooldown,
+		maxRequests: maxRequests,
+		ttl:         ttl,
+		tokens:      tokens,
 	}
 
 	return limiter
 }
 
 func (l *Limiter) Limit(ip string, token string) error {
-	limit := l.ipDefaultLimit
-	ttl := l.ipTTL
+	maxRequests := l.maxRequests
 	term := ip
+	cooldown := l.cooldown
 
 	tokenConfig, tokenExists := l.tokens[token]
 
 	if tokenExists {
 		term = tokenConfig.Name
-		ttl = tokenConfig.Ttl
-		limit = tokenConfig.MaxRequests
+		maxRequests = tokenConfig.MaxRequests
+		cooldown = tokenConfig.Cooldown
 	}
 
-	return l.goNext(term, limit, ttl)
+	return l.goNext(term, maxRequests, cooldown)
 }
 
-func (l *Limiter) goNext(term string, limit int, reqTTL int) error {
-	counter, err := l.storage.GetCounter(term)
+func (l *Limiter) goNext(term string, maxRequests int, cooldown int) error {
+	isBlocked, err := l.storage.IsBlocked(term)
 
 	if err != nil {
 		return err
 	}
 
-	if counter == limit {
-		l.storage.RegisterBlock(term, l.cooldown)
+	if isBlocked {
 		return ErrLimitedAccess
 	}
 
-	l.storage.IncrementCounter(term, reqTTL)
+	counter, err := l.storage.IncrementCounter(term, l.ttl)
+
+	if err != nil {
+		return err
+	}
+
+	if counter >= int64(maxRequests) {
+		err = l.storage.RegisterBlock(term, cooldown)
+	}
+
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

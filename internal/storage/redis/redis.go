@@ -3,11 +3,15 @@ package redis
 import (
 	"context"
 	"fmt"
+	"log"
 	"strconv"
 	"time"
 
 	"github.com/redis/go-redis/v9"
+	"github.com/rhbarauna/goexpert-desafio-rate-limiter/internal/storage"
 )
+
+var _ storage.Storage = (*RedisStorage)(nil)
 
 type RedisStorage struct {
 	client *redis.Client
@@ -37,28 +41,35 @@ func (s *RedisStorage) GetCounter(key string) (int, error) {
 	return count, nil
 }
 
-func (s *RedisStorage) IncrementCounter(key string, ttl int) error {
-	newKey, err := s.client.Exists(context.Background(), "ratelimits:req_qnt:").Result()
+func (s *RedisStorage) IncrementCounter(key string, ttl int) (int64, error) {
+	redisKey := fmt.Sprintf("ratelimits:req_qnt:%s", key)
+	newKey, err := s.client.Exists(context.Background(), redisKey).Result()
+
+	log.Printf("%s, is new? %v\n", redisKey, newKey)
 
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	err = s.client.Incr(context.Background(), "ratelimits:req_qnt:"+key).Err()
+	counter, err := s.client.Incr(context.Background(), redisKey).Result()
 
 	if err != nil {
-		return err
+		return 0, err
 	}
 
+	// O método Exists retorna 1 se a chave existir, 0 se não existir
 	if newKey == 0 {
-		err := s.client.Expire(context.Background(), key, time.Duration(ttl)*time.Second).Err()
+		duration := time.Duration(ttl) * time.Second
+		err := s.client.Expire(context.Background(), redisKey, duration).Err()
 
 		if err != nil {
-			return err
+			log.Printf("erro ao setar o expire para a chave %s. %s\n", redisKey, err.Error())
+			return 0, err
 		}
+		log.Printf("Setado o expire para a chave %s.\n", redisKey)
 	}
 
-	return nil
+	return counter, nil
 }
 
 func (s *RedisStorage) RegisterBlock(key string, cooldown int) error {

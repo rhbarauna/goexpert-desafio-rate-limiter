@@ -8,8 +8,8 @@ import (
 
 type TokenConfig struct {
 	Name        string `json:"name"`
-	MaxRequests int    `json:"limit"`
-	Ttl         int    `json:"ttl"`
+	MaxRequests int    `json:"max_requests"`
+	Cooldown    int    `json:"cooldown_seconds"`
 }
 
 type conf struct {
@@ -18,10 +18,10 @@ type conf struct {
 	RedisPassword string `mapstructure:"REDIS_PASSWORD"`
 	RedisDatabase int    `mapstructure:"REDIS_DATABASE"`
 
-	Tokens             map[string]TokenConfig `mapstructure:"-"`
-	IpMaxRequests      int                    `mapstructure:"IP_MAX_REQUESTS"`
-	IpMaxRequestWindow int                    `mapstructure:"IP_MAX_REQUESTS_WINDOW_SECONDS"`
-	Cooldown           int                    `mapstructure:"COOLDOWN_SECONDS"`
+	Tokens      map[string]TokenConfig `mapstructure:"-"`
+	MaxRequests int                    `mapstructure:"MAX_REQUESTS"`
+	Ttl         int                    `mapstructure:"TTL_SECONDS"`
+	Cooldown    int                    `mapstructure:"COOLDOWN_SECONDS"`
 
 	WebServerPort string `mapstructure:"WEB_SERVER_PORT"`
 }
