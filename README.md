@@ -3,9 +3,13 @@
 ## Overview
 
 The Rate Limiter restricts access to the web server based on the defined configuration in the .env file.
+
 It limits the number of requests that exceed the configured values.
+
 The limiter performs analysis based on the provided token in the request header with the key API_KEY.
+
 If a configuration is found for that token, the specified limits and blocking time will be applied.
+
 If no token is passed or the token does not have a configuration, default values will be applied based on the IP address of the request.
 
 The Rate Limiter is a tool designed to control the rate of incoming requests to a web server.
