@@ -1,12 +1,12 @@
 package storage
 
-type Storage interface {
-	GetCounter(key string) (int, error)
-	IncrementCounter(key string, ttl int) (int64, error)
-	RegisterBlock(key string, cooldown int) error
-	IsBlocked(key string) (bool, error)
+import (
+	"context"
+)
 
-	// Increment(ctx context.Context, key string) error
-	// Get(ctx context.Context, key string) (int, error)
-	// Expire(ctx context.Context, key string, duration time.Duration) error
+type Storage interface {
+	Increment(ctx context.Context, key string, ttl int) (int, error)
+	Get(ctx context.Context, key string) (interface{}, error)
+	Set(ctx context.Context, key string, ttl int) error
+	Exists(ctx context.Context, key string) (bool, error)
 }

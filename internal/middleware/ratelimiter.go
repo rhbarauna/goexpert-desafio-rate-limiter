@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"log"
 	"net"
 	"net/http"
 	"strings"
@@ -50,6 +51,7 @@ func (rl *RateLimiter) Limit(next http.Handler) http.Handler {
 			}
 
 			if err != nil {
+				log.Printf("Limiter Error: %s\n", err.Error())
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
