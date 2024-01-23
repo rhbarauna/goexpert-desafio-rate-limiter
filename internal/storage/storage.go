@@ -1,12 +1,12 @@
 package storage
 
-import "github.com/rhbarauna/goexpert-desafio-rate-limiter/internal/database"
+import (
+	"context"
+)
 
 type Storage interface {
-	SetTokenConfig(token string, rateLimitInfo database.RateLimitInfo) error
-	GetTokenConfig(token string) (database.RateLimitInfo, error)
-	GetCounter(key string) (int, error)
-	IncrementCounter(key string, ttl int) error
-	RegisterBlock(key string, cooldown int) error
-	IsBlocked(key string) (bool, error)
+	Increment(ctx context.Context, key string, ttl int) (int, error)
+	Get(ctx context.Context, key string) (interface{}, error)
+	Set(ctx context.Context, key string, ttl int) error
+	Exists(ctx context.Context, key string) (bool, error)
 }

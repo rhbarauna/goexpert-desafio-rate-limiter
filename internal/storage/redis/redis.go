@@ -2,21 +2,21 @@ package redis
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/redis/go-redis/v9"
-	"github.com/rhbarauna/goexpert-desafio-rate-limiter/internal/database"
+	"github.com/rhbarauna/goexpert-desafio-rate-limiter/internal/storage"
 )
 
-type RedisStorage struct {
+var _ storage.Storage = (*redisStorage)(nil)
+
+type redisStorage struct {
 	client *redis.Client
 }
 
-func NewRedisStorage(address string, port string, password string, database int) *RedisStorage {
-	return &RedisStorage{
+func NewRedisStorage(address string, port string, password string, database int) *redisStorage {
+	return &redisStorage{
 		client: redis.NewClient(&redis.Options{
 			Addr:     fmt.Sprintf("%s:%s", address, port),
 			Password: password,
@@ -25,75 +25,48 @@ func NewRedisStorage(address string, port string, password string, database int)
 	}
 }
 
-func (s *RedisStorage) SetTokenConfig(token string, rateLimitInfo database.RateLimitInfo) error {
-	infoJSON, err := json.Marshal(rateLimitInfo)
-	if err != nil {
-		return err
-	}
+func (s *redisStorage) Increment(ctx context.Context, key string, ttl int) (int, error) {
+	pipe := s.client.Pipeline()
 
-	err = s.client.Set(context.Background(), "ratelimits:token:"+token, infoJSON, time.Second*time.Duration(rateLimitInfo.TtlLimit)).Err()
-	if err != nil {
-		return err
-	}
+	pipe.Exists(ctx, key)
+	pipe.Incr(ctx, key)
 
-	return nil
-}
+	counter, err := pipe.Exec(ctx) // Execute the pipeline
 
-func (s *RedisStorage) GetTokenConfig(token string) (database.RateLimitInfo, error) {
-	infoStr, err := s.client.Get(context.Background(), "ratelimits:token:"+token).Result()
-	if err != nil {
-		return database.RateLimitInfo{}, err
-	}
-
-	var info database.RateLimitInfo
-	err = json.Unmarshal([]byte(infoStr), &info)
-	if err != nil {
-		return database.RateLimitInfo{}, err
-	}
-
-	return info, nil
-}
-
-func (s *RedisStorage) GetCounter(key string) (int, error) {
-	countStr, err := s.client.Get(context.Background(), "ratelimits:req_qnt:"+key).Result()
 	if err != nil {
 		return 0, err
 	}
 
-	count, err := strconv.Atoi(countStr)
+	if len(counter) > 0 && counter[0].(*redis.IntCmd).Val() == 0 { // Key didn't exist
+		err = pipe.Expire(ctx, key, time.Duration(ttl)*time.Second).Err()
+	}
+
 	if err != nil {
 		return 0, err
 	}
 
-	return count, nil
+	_, err = pipe.Exec(ctx) // Ensure pipeline execution
+	if err != nil {
+		return 0, err
+	}
+
+	return int(counter[1].(*redis.IntCmd).Val()), nil
 }
 
-func (s *RedisStorage) IncrementCounter(key string, ttl int) error {
-	newKey, err := s.client.Exists(context.Background(), "ratelimits:req_qnt:").Result()
-
-	if err != nil {
-		return err
-	}
-
-	err = s.client.Incr(context.Background(), "ratelimits:req_qnt:"+key).Err()
-
-	if err != nil {
-		return err
-	}
-
-	if newKey == 0 {
-		err := s.client.Expire(context.Background(), key, time.Duration(ttl)*time.Second).Err()
-
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+func (s *redisStorage) Get(ctx context.Context, key string) (interface{}, error) {
+	return s.client.Get(ctx, key).Result()
 }
 
-func (s *RedisStorage) RegisterBlock(key string, cooldown int) error {
-	err := s.client.Set(context.Background(), "ratelimits:blocked:"+key, cooldown, time.Second*time.Duration(cooldown)).Err()
+func (s *redisStorage) Set(ctx context.Context, key string, ttl int) error {
+	var err error
+	pipe := s.client.Pipeline()
+	pipe.Set(ctx, key, true, 0)
+
+	if ttl != 0 {
+		err = pipe.Expire(ctx, key, time.Duration(ttl)*time.Second).Err()
+	}
+
+	_, err = pipe.Exec(ctx)
 	if err != nil {
 		return err
 	}
@@ -101,11 +74,11 @@ func (s *RedisStorage) RegisterBlock(key string, cooldown int) error {
 	return nil
 }
 
-func (s *RedisStorage) IsBlocked(key string) (bool, error) {
-	exists, err := s.client.Exists(context.Background(), "ratelimits:blocked:"+key).Result()
+func (s *redisStorage) Exists(ctx context.Context, key string) (bool, error) {
+	result, err := s.client.Exists(ctx, key).Result()
 	if err != nil {
 		return false, err
 	}
 
-	return exists == 1, nil
+	return result == 1, nil
 }

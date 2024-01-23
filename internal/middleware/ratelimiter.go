@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"log"
+	"net"
 	"net/http"
 	"strings"
 
@@ -9,40 +10,48 @@ import (
 )
 
 type RateLimiter struct {
-	Limiter limiter.Limiter
+	limiter limiter.Limiter
 }
 
-func NewRateLimiter(limiter limiter.Limiter) *RateLimiter {
-	return &RateLimiter{
-		Limiter: limiter,
+func NewRateLimiter(limiter limiter.Limiter) RateLimiter {
+	return RateLimiter{limiter: limiter}
+}
+
+func getParsedIp(address string) string {
+	parsedIP := net.ParseIP(address)
+
+	if parsedIP.To4() == nil {
+		return "127.0.0.1"
 	}
+
+	if parsedIP.To16().String() != "" {
+		return parsedIP.To16().String()
+	}
+
+	return parsedIP.To4().String()
 }
 
 func (rl *RateLimiter) Limit(next http.Handler) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
-			var moveOn bool
-			var err error
-
 			token := strings.Trim(r.Header.Get("API_KEY"), " ")
+			address := r.Header.Get("X-Real-IP")
 
-			if token != "" {
-				moveOn, err = rl.Limiter.HandleToken(token)
+			if address == "" {
+				address = r.RemoteAddr
 			}
 
-			if token == "" || err != nil {
-				ip := ""
-				moveOn, err = rl.Limiter.HandleIP(ip)
-			}
+			ip := getParsedIp(address)
 
-			if moveOn {
-				log.Printf("Request bloqueada %v\n", r)
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+			err := rl.limiter.Limit(ip, token)
+
+			if err == limiter.ErrLimitedAccess {
+				http.Error(w, "You have reached the maximum number of requests or actions allowed within a certain time frame.", http.StatusTooManyRequests)
 				return
 			}
 
 			if err != nil {
-				log.Printf("Erro no limiter %v\n", err.Error())
+				log.Printf("Limiter Error: %s\n", err.Error())
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
