@@ -2,6 +2,7 @@ package configs
 
 import (
 	"encoding/json"
+	"log"
 
 	"github.com/spf13/viper"
 )
@@ -30,16 +31,16 @@ func LoadConfig(path string) (*conf, error) {
 	var cfg *conf
 	viper.SetConfigName("rate_limiter_config")
 	viper.SetConfigType("env")
-	viper.AddConfigPath(path)
-	viper.SetConfigFile(".env")
+	viper.SetConfigFile(path + "/.env")
 	viper.AutomaticEnv()
 	err := viper.ReadInConfig()
+
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 	err = viper.Unmarshal(&cfg)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 
 	var tkns_cfg []TokenConfig
@@ -47,7 +48,7 @@ func LoadConfig(path string) (*conf, error) {
 	err = json.Unmarshal([]byte(configured_tokens), &tkns_cfg)
 
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 
 	cfg.Tokens = make(map[string]TokenConfig)

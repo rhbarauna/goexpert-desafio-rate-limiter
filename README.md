@@ -1,54 +1,48 @@
-# Rate Limiter Application
+# Rate Limiter
 
 ## Overview
 
-- Briefly describe the application's purpose and key features (rate limiting, token-based limits, etc.).
-- Highlight any specific use cases or target audiences.
+The Rate Limiter restricts access to the web server based on the defined configuration in the .env file.
+It limits the number of requests that exceed the configured values.
+The limiter performs analysis based on the provided token in the request header with the key API_KEY.
+If a configuration is found for that token, the specified limits and blocking time will be applied.
+If no token is passed or the token does not have a configuration, default values will be applied based on the IP address of the request.
 
-## Technologies
+The Rate Limiter is a tool designed to control the rate of incoming requests to a web server.
+It works by analyzing tokens and/or IP addresses and applying rate-limiting policies based on the configuration provided.
 
-- List the programming languages, frameworks, and libraries used (Go, chi router, Redis, etc.).
+Feel free to customize the configuration to suit your application's needs.
 
-## Installation
+## Getting Started
 
-1. **Prerequisites:**
-   - List any required software (Go, Redis, etc.) and their versions.
-   - Provide installation instructions if necessary.
-2. **Getting the code:**
-   - Explain how to obtain the code (e.g., cloning from a repository).
-3. **Dependencies:**
-   - Explain how to install dependencies (e.g., using `go get`).
+### Prerequisites
 
-## Configuration
+Before you begin, make sure you have Docker and Go installed on your machine.
 
-1. **Environment variables:**
-   - List all required environment variables with descriptions and examples.
-   - Explain how to set them (e.g., using a `.env` file).
-2. **Redis configuration:**
-   - Provide guidance on setting up Redis, including host, port, password, and database details.
+### Configuration
 
-## Running the application
+The application can be configured via the `.env` file located in the `/cmd` directory. Here is an example of the `.env` file:
 
-1. **Building the application:**
-   - Describe the build process using `go build` or similar commands.
-2. **Starting the server:**
-   - Explain how to start the server, including any necessary command-line arguments.
+```env
+MAX_REQUESTS=10
+TOKENS=[{"name": "tkn_123", "max_requests": 20, "cooldown_seconds": 3}, {"name": "tkn_456", "max_requests": 30, "cooldown_seconds":4}]
+TTL_SECONDS=1
+COOLDOWN_SECONDS=5
+WEB_SERVER_PORT=:8080
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=
+REDIS_DB=0
+```
 
-## Testing
+**Adjust the values in the `.env` file according to your desired configuration.**
 
-1. **Unit tests:**
-   - Explain how to run unit tests, including any required setup or dependencies.
-   - Mention the scope of unit tests (e.g., testing individual components).
-2. **Integration tests:**
-   - Describe how to run integration tests that exercise the rate limiter within the application context.
-   - Explain any external dependencies or setup required for integration tests.
-3. **Load testing (optional):**
-   - If applicable, provide guidance on load testing using tools like Vegeta or k6.
-   - Suggest strategies for configuring load patterns and measuring performance metrics.
+### Usage
 
-## Additional notes
+To start the application, run the following command:
 
-- Include any other relevant information, such as:
-  - Troubleshooting tips
-  - Limitations or known issues
-  - Contact information for support
+```bash
+make run # OR make start
+```
+
+This command will start the application using Docker Compose and then run the main.go file.

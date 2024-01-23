@@ -1,7 +1,11 @@
 package main
 
 import (
+	"fmt"
+	"log"
 	"net/http"
+	"path/filepath"
+	"runtime"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -12,7 +16,14 @@ import (
 )
 
 func main() {
-	configs, err := configs.LoadConfig(".")
+	_, currentFile, _, ok := runtime.Caller(0)
+	if !ok {
+		fmt.Println("Erro ao obter informações do arquivo.")
+		return
+	}
+	goDir := filepath.Dir(currentFile)
+
+	configs, err := configs.LoadConfig(goDir)
 	if err != nil {
 		panic(err)
 	}
@@ -36,7 +47,7 @@ func main() {
 		w.Write([]byte("OK"))
 	})
 
+	log.Println("Iniciando o servidor web...")
 	http.ListenAndServe(webServerPort, router)
-
-	//END WEBSERVER
+	// END WEBSERVER
 }
