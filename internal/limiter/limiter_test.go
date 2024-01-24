@@ -47,7 +47,7 @@ func (suite *LimiterSuite) SetupTest() {
 
 func (suite *LimiterSuite) TestLimit_CustomToken_Success() {
 	ctx := context.Background()
-	suite.storage.On("Exists", ctx, "ratelimit:blocked:custom").Return(false, nil)
+	suite.storage.On("IsBlocked", ctx, "ratelimit:blocked:custom").Return(false, nil)
 	suite.storage.On("Increment", ctx, "ratelimit:req_qnt:custom", suite.ttl).Return(1, nil)
 	err := suite.limiter.Limit("127.0.0.1", "custom")
 	assert.NoError(suite.T(), err)
@@ -57,7 +57,7 @@ func (suite *LimiterSuite) TestLimit_ExceedTokenMaxRequests_Error() {
 	tknCfg := suite.tokens["default"]
 	ctx := context.Background()
 
-	suite.storage.On("Exists", ctx, "ratelimit:blocked:default").Return(false, nil)
+	suite.storage.On("IsBlocked", ctx, "ratelimit:blocked:default").Return(false, nil)
 
 	for i := 0; i < tknCfg.MaxRequests; i++ {
 		suite.storage.On("Increment", ctx, "ratelimit:req_qnt:default", suite.ttl).Return(i+1, nil).Once()
@@ -75,7 +75,7 @@ func (suite *LimiterSuite) TestLimit_TokenBlockingDuration() {
 	tknCfg := suite.tokens["default"]
 	ctx := context.Background()
 
-	suite.storage.On("Exists", ctx, "ratelimit:blocked:default").Return(false, nil)
+	suite.storage.On("IsBlocked", ctx, "ratelimit:blocked:default").Return(false, nil)
 
 	for i := 0; i < tknCfg.MaxRequests; i++ {
 		suite.storage.On("Increment", ctx, "ratelimit:req_qnt:default", suite.ttl).Return(i+1, nil).Once()
@@ -91,7 +91,7 @@ func (suite *LimiterSuite) TestLimit_TokenBlockingDuration() {
 	// Esperar o tempo de bloqueio
 	time.Sleep(time.Duration(tknCfg.Cooldown) * time.Second)
 
-	suite.storage.On("Exists", ctx, "ratelimit:blocked:default").Return(false, nil)
+	suite.storage.On("IsBlocked", ctx, "ratelimit:blocked:default").Return(false, nil)
 	suite.storage.On("Increment", ctx, "ratelimit:req_qnt:default", suite.ttl).Return(1, nil).Once()
 	err = suite.limiter.Limit("127.0.0.1", tknCfg.Name)
 	assert.NoError(suite.T(), err)
@@ -99,7 +99,7 @@ func (suite *LimiterSuite) TestLimit_TokenBlockingDuration() {
 
 func (suite *LimiterSuite) TestLimit_IP_Success() {
 	ctx := context.Background()
-	suite.storage.On("Exists", ctx, "ratelimit:blocked:127.0.0.1").Return(false, nil)
+	suite.storage.On("IsBlocked", ctx, "ratelimit:blocked:127.0.0.1").Return(false, nil)
 	suite.storage.On("Increment", ctx, "ratelimit:req_qnt:127.0.0.1", suite.ttl).Return(1, nil)
 	err := suite.limiter.Limit("127.0.0.1", "")
 	assert.NoError(suite.T(), err)
@@ -107,7 +107,7 @@ func (suite *LimiterSuite) TestLimit_IP_Success() {
 
 func (suite *LimiterSuite) TestLimit_ExceedIpMaxRequests_Error() {
 	ctx := context.Background()
-	suite.storage.On("Exists", ctx, "ratelimit:blocked:127.0.0.1").Return(false, nil)
+	suite.storage.On("IsBlocked", ctx, "ratelimit:blocked:127.0.0.1").Return(false, nil)
 
 	for i := 0; i < suite.maxRequests; i++ {
 		suite.storage.On("Increment", ctx, "ratelimit:req_qnt:127.0.0.1", suite.ttl).Return(i+1, nil).Once()
@@ -124,7 +124,7 @@ func (suite *LimiterSuite) TestLimit_ExceedIpMaxRequests_Error() {
 
 func (suite *LimiterSuite) TestLimit_IpBlockingDuration() {
 	ctx := context.Background()
-	suite.storage.On("Exists", ctx, "ratelimit:blocked:127.0.0.1").Return(false, nil)
+	suite.storage.On("IsBlocked", ctx, "ratelimit:blocked:127.0.0.1").Return(false, nil)
 
 	for i := 0; i < suite.maxRequests; i++ {
 		suite.storage.On("Increment", ctx, "ratelimit:req_qnt:127.0.0.1", suite.ttl).Return(i+1, nil).Once()

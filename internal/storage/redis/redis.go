@@ -82,3 +82,7 @@ func (s *redisStorage) Exists(ctx context.Context, key string) (bool, error) {
 
 	return result == 1, nil
 }
+
+func (s *redisStorage) IsBlocked(ctx context.Context, key string) (bool, error) {
+	return s.Exists(ctx, key)
+}

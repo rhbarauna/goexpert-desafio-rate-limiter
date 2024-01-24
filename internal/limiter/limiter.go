@@ -52,7 +52,7 @@ func (l *limiter) Limit(ip string, token string) error {
 	reqQntKey := fmt.Sprintf("ratelimit:req_qnt:%s", term)
 	blockedKey := fmt.Sprintf("ratelimit:blocked:%s", term)
 
-	isBlocked, err := l.Storage.Exists(ctx, blockedKey)
+	isBlocked, err := l.Storage.IsBlocked(ctx, blockedKey)
 
 	if err != nil {
 		return err
