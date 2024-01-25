@@ -1,4 +1,4 @@
-.PHONY: start run
+.PHONY: start run run-tests
 
 start:
 	@echo "Starting Docker containers..."
@@ -8,3 +8,6 @@ start:
 	go run cmd/main.go
 
 run: start
+
+run-tests:
+	go test ./... -v

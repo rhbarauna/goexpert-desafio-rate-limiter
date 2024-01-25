@@ -1,0 +1,17 @@
+# para facilitar os testes, 
+# configure um TTL_SECONDS maior que 1 no arquivo .env
+
+### Limitando pelo ip 
+GET http://localhost:8080/ HTTP/1.1
+Host: localhost:8080
+
+### Limitando pelo ip quando o token informado não está configurado
+GET http://localhost:8080/ HTTP/1.1
+Host: localhost:8080
+API_KEY: tkn_123456
+
+###
+# Limitando pelo token
+GET http://localhost:8080/ HTTP/1.1
+Host: localhost:8080
+API_KEY: tkn_123

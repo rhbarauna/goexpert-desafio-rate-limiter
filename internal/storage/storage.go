@@ -9,4 +9,5 @@ type Storage interface {
 	Get(ctx context.Context, key string) (interface{}, error)
 	Set(ctx context.Context, key string, ttl int) error
 	Exists(ctx context.Context, key string) (bool, error)
+	IsBlocked(ctx context.Context, key string) (bool, error)
 }

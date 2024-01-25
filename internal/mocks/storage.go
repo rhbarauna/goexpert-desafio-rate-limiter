@@ -36,3 +36,8 @@ func (sm *StorageMock) Exists(ctx context.Context, key string) (bool, error) {
 	args := sm.Called(ctx, key)
 	return args.Bool(0), args.Error(1)
 }
+
+func (sm *StorageMock) IsBlocked(ctx context.Context, key string) (bool, error) {
+	args := sm.Called(ctx, key)
+	return args.Bool(0), args.Error(1)
+}
