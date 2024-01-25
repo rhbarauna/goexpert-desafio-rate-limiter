@@ -26,8 +26,8 @@ The rate limiter is built using the following technologies:
 ## Customizable Storage
 
 The rate limiter uses Redis as the default storage backend.
-However, you have the flexibility to substitute Redis with a different storage
-solution, as long as the new storage implements the `Storage` interface found in the `storage` package:
+However, you have the flexibility to substitute Redis with a different storage solution,
+as long as the new storage implements the `Storage` interface found in the `storage` package:
 
 ```go
 type Storage interface {
@@ -36,6 +36,14 @@ type Storage interface {
     Set(ctx context.Context, key string, ttl int) error
     Exists(ctx context.Context, key string) (bool, error)
     IsBlocked(ctx context.Context, key string) (bool, error)
+}
+```
+
+Then, change the wire provider to provide the new storage
+
+```go
+func provideStorage(config *configs.Config) storage.Storage {
+	return MyStorage(/* needed arguments*/)
 }
 ```
 
@@ -96,3 +104,17 @@ To execute all tests, run the following command:
 ```bash
 make run-tests
 ```
+
+### Request Examples
+
+Testing the Rate Limiter manually is possible using the .http file located in the /api directory.
+It contains request examples for various scenarios, including:
+
+- **Untokened requests:** These are subject to the default rate limits configured based on IP addresses.
+- **Tokenized requests:** These are subject to the rate limits specifically configured for the provided token.
+- **Requests with unknown tokens:** These are treated as untokened requests and fall back to the default rate limits based on IP addresses.
+
+To execute an example request, use an HTTP client like curl or Postman or a Rest Client.
+For example, running the untokened request example with curl:
+
+curl -X GET http://localhost:8080
