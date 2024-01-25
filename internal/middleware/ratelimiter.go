@@ -10,10 +10,10 @@ import (
 )
 
 type RateLimiter struct {
-	limiter limiter.Limiter
+	limiter limiter.LimiterInterface
 }
 
-func NewRateLimiter(limiter limiter.Limiter) RateLimiter {
+func NewRateLimiter(limiter limiter.LimiterInterface) RateLimiter {
 	return RateLimiter{limiter: limiter}
 }
 

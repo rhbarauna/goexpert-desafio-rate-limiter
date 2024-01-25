@@ -15,7 +15,7 @@ import (
 
 type LimiterSuite struct {
 	suite.Suite
-	limiter     limiter.Limiter
+	limiter     limiter.LimiterInterface
 	storage     *mocks.StorageMock
 	cooldown    int
 	maxRequests int

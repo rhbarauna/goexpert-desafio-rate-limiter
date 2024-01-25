@@ -13,11 +13,12 @@ type TokenConfig struct {
 	Cooldown    int    `json:"cooldown_seconds"`
 }
 
-type conf struct {
-	RedisHost     string `mapstructure:"REDIS_HOST"`
-	RedisPort     string `mapstructure:"REDIS_PORT"`
-	RedisPassword string `mapstructure:"REDIS_PASSWORD"`
-	RedisDatabase int    `mapstructure:"REDIS_DATABASE"`
+type Config struct {
+	DBHost     string `mapstructure:"DB_HOST"`
+	DBPort     string `mapstructure:"DB_PORT"`
+	DBPassword string `mapstructure:"DB_PASSWORD"`
+	DBName     string `mapstructure:"DB_NAME"`
+	DBUser     string `mapstructure:"DB_USER"`
 
 	Tokens      map[string]TokenConfig `mapstructure:"-"`
 	MaxRequests int                    `mapstructure:"MAX_REQUESTS"`
@@ -27,8 +28,8 @@ type conf struct {
 	WebServerPort string `mapstructure:"WEB_SERVER_PORT"`
 }
 
-func LoadConfig(path string) (*conf, error) {
-	var cfg *conf
+func LoadConfig(path string) (*Config, error) {
+	var cfg *Config
 	viper.SetConfigName("rate_limiter_config")
 	viper.SetConfigType("env")
 	viper.SetConfigFile(path + "/.env")

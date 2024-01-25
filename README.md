@@ -21,6 +21,7 @@ The rate limiter is built using the following technologies:
 - [go-redis](https://github.com/redis/go-redis): A Go client library for the Redis database.
 - [go-chi](https://github.com/go-chi/chi): A lightweight, idiomatic, and composable router for building Go HTTP services.
 - [testify](https://github.com/stretchr/testify): A testing toolkit for Go.
+- [wire](https://github.com/google/wire): Automated Initialization in Go.
 
 ## Customizable Storage
 

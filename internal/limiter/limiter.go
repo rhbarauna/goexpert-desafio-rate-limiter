@@ -9,13 +9,13 @@ import (
 	"github.com/rhbarauna/goexpert-desafio-rate-limiter/internal/storage"
 )
 
-var _ Limiter = (*limiter)(nil)
+var _ LimiterInterface = (*Limiter)(nil)
 
-type Limiter interface {
+type LimiterInterface interface {
 	Limit(ip string, token string) error
 }
 
-type limiter struct {
+type Limiter struct {
 	Storage     storage.Storage
 	Cooldown    int
 	MaxRequests int
@@ -25,8 +25,8 @@ type limiter struct {
 
 var ErrLimitedAccess = errors.New("access blocked")
 
-func NewLimiter(storage storage.Storage, cooldown int, maxRequests int, ttl int, tokens map[string]configs.TokenConfig) *limiter {
-	limiter := &limiter{
+func NewLimiter(storage storage.Storage, cooldown int, maxRequests int, ttl int, tokens map[string]configs.TokenConfig) *Limiter {
+	limiter := &Limiter{
 		Storage:     storage,
 		Cooldown:    cooldown,
 		MaxRequests: maxRequests,
@@ -37,7 +37,7 @@ func NewLimiter(storage storage.Storage, cooldown int, maxRequests int, ttl int,
 	return limiter
 }
 
-func (l *limiter) Limit(ip string, token string) error {
+func (l *Limiter) Limit(ip string, token string) error {
 	ctx := context.Background()
 	term := ip
 	maxRequests := l.MaxRequests

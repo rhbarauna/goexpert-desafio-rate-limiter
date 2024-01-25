@@ -5,7 +5,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-var _ limiter.Limiter = (*LimiterMock)(nil)
+var _ limiter.LimiterInterface = (*LimiterMock)(nil)
 
 type LimiterMock struct {
 	mock.Mock
