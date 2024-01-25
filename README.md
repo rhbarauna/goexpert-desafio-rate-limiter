@@ -2,6 +2,7 @@
 
 ## Overview
 
+<<<<<<< HEAD
 A tool designed to control the rate of incoming requests to a web server.
 It works by analyzing tokens and/or IP addresses and applying rate-limiting policies based on the configuration provided.
 
@@ -46,6 +47,18 @@ func provideStorage(config *configs.Config) storage.Storage {
 	return MyStorage(/* needed arguments*/)
 }
 ```
+=======
+The Rate Limiter restricts access to the web server based on the defined configuration in the .env file.
+It limits the number of requests that exceed the configured values.
+The limiter performs analysis based on the provided token in the request header with the key API_KEY.
+If a configuration is found for that token, the specified limits and blocking time will be applied.
+If no token is passed or the token does not have a configuration, default values will be applied based on the IP address of the request.
+
+The Rate Limiter is a tool designed to control the rate of incoming requests to a web server.
+It works by analyzing tokens and/or IP addresses and applying rate-limiting policies based on the configuration provided.
+
+Feel free to customize the configuration to suit your application's needs.
+>>>>>>> 7146da8e068887c7389e545a3f83d7298bc05ea8
 
 ## Getting Started
 
@@ -59,7 +72,11 @@ The application can be configured via the `.env` file located in the `/cmd` dire
 
 ```env
 MAX_REQUESTS=10
+<<<<<<< HEAD
 TOKENS=[{"name": "tkn_123", "max_requests": 20, "cooldown_seconds": 3}, {"name": "tkn_456", "max_requests": 30, "cooldown_seconds": 4}]
+=======
+TOKENS=[{"name": "tkn_123", "max_requests": 20, "cooldown_seconds": 3}, {"name": "tkn_456", "max_requests": 30, "cooldown_seconds":4}]
+>>>>>>> 7146da8e068887c7389e545a3f83d7298bc05ea8
 TTL_SECONDS=1
 COOLDOWN_SECONDS=5
 WEB_SERVER_PORT=:8080
@@ -71,6 +88,7 @@ REDIS_DB=0
 
 **Adjust the values in the `.env` file according to your desired configuration.**
 
+<<<<<<< HEAD
 ### Explanation of `.env` Items
 
 - **MAX_REQUESTS**: Specifies the maximum number of requests allowed within the time window defined by `TTL_SECONDS`.
@@ -89,6 +107,8 @@ REDIS_DB=0
 - **max_requests**: The maximum number of requests allowed within the time window (`TTL_SECONDS`) for this specific token.
 - **cooldown_seconds**: The blocking time applied when the request limit is exceeded for this specific token.
 
+=======
+>>>>>>> 7146da8e068887c7389e545a3f83d7298bc05ea8
 ### Usage
 
 To start the application, run the following command:
@@ -98,6 +118,7 @@ make run # OR make start
 ```
 
 This command will start the application using Docker Compose and then run the main.go file.
+<<<<<<< HEAD
 
 To execute all tests, run the following command:
 
@@ -118,3 +139,5 @@ To execute an example request, use an HTTP client like curl or Postman or a Rest
 For example, running the untokened request example with curl:
 
 curl -X GET http://localhost:8080
+=======
+>>>>>>> 7146da8e068887c7389e545a3f83d7298bc05ea8
