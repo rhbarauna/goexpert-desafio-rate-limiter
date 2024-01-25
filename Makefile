@@ -5,7 +5,7 @@ start:
 	docker-compose up -d
 	@echo "Docker containers started successfully."
 	@echo "Starting the application..."
-	go run cmd/main.go
+	go run cmd/main.go cmd/wire_gen.go
 
 run: start
 

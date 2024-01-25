@@ -5,17 +5,12 @@
     "version": "0.2.0",
     "configurations": [
         {
-<<<<<<< HEAD
             "name": "Attach",
-=======
-            "name": "Attach to Process",
->>>>>>> 7146da8e068887c7389e545a3f83d7298bc05ea8
             "type": "go",
             "request": "attach",
             "mode": "local",
             "processId": "${command:pickProcess}",
             "showLog": true
-<<<<<<< HEAD
         },
         {
             "name": "Launch",
@@ -24,8 +19,6 @@
             "mode": "auto",
             "program": "${workspaceFolder}/cmd",
             "args": ["main.go", "wire_gen.go"]
-=======
->>>>>>> 7146da8e068887c7389e545a3f83d7298bc05ea8
         }
     ]
 }
